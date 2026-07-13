@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>アポ獲得トラッカー</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --bg: #12151C;
+    --surface: #1A1E28;
+    --surface-2: #212632;
+    --border: #2A2F3A;
+    --border-strong: #3A4150;
+    --text: #EDEDE5;
+    --text-2: #9CA0AC;
+    --text-3: #666C79;
+    --calls: #4FA8D8;
+    --calls-dim: #2C4A5C;
+    --appt: #E8B34A;
+    --appt-dim: #5C4A22;
+    --good: #6FC08A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    padding:32px 20px 60px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  .header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--border-strong);
+    padding-bottom:18px;margin-bottom:28px;flex-wrap:wrap;gap:12px;
+  }
+  .header h1{
+    font-size:22px;font-weight:700;margin:0 0 4px;letter-spacing:.02em;
+  }
+  .header .sub{color:var(--text-2);font-size:13px;font-family:'Space Mono',monospace;}
+
+  .team-bar-section{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:18px 20px;margin-bottom:28px;
+  }
+  .team-bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .team-bar-top .label{font-size:13px;color:var(--text-2);}
+  .team-bar-top .num{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--appt);}
+  .team-bar-top .num span{color:var(--text-3);font-size:14px;font-weight:400;}
+  .team-track{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+  .team-fill{height:100%;background:var(--appt);border-radius:4px;transition:width .4s ease;}
+  .team-sub-stats{margin-top:10px;font-size:12px;color:var(--text-2);font-family:'Space Mono',monospace;}
+  .team-sub-stats .hl{color:var(--calls);}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:14px;margin-bottom:32px;
+  }
+  .rep-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:16px 18px;
+  }
+  .rep-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;}
+  .rep-name{
+    background:transparent;border:none;color:var(--text);font-size:15px;font-weight:700;
+    font-family:'Zen Kaku Gothic New',sans-serif;padding:2px 0;border-bottom:1px solid transparent;
+    width:100%;
+  }
+  .rep-name:hover, .rep-name:focus{border-bottom:1px solid var(--border-strong);outline:none;}
+  .rank{
+    font-family:'Space Mono',monospace;font-size:11px;color:var(--text-3);
+    border:1px solid var(--border);border-radius:3px;padding:2px 6px;flex-shrink:0;
+  }
+  .stat-row{display:flex;gap:14px;margin-bottom:12px;}
+  .stat{flex:1;}
+  .stat .k{font-size:11px;color:var(--text-2);margin-bottom:3px;}
+  .stat .v{font-family:'Space Mono',monospace;font-size:19px;font-weight:700;}
+  .stat.calls .v{color:var(--calls);}
+  .stat.appt .v{color:var(--appt);}
+  .rate{font-size:11px;color:var(--text-3);margin-bottom:10px;font-family:'Space Mono',monospace;}
+  .goal-track{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;border:1px solid var(--border);}
+  .goal-fill{height:100%;background:var(--appt);border-radius:3px;transition:width .4s ease;}
+  .goal-label{font-size:11px;color:var(--text-3);margin-top:5px;font-family:'Space Mono',monospace;}
+  .month-goal-input{
+    width:44px;background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text-3);
+    border-radius:3px;padding:2px 4px;font-size:11px;font-family:'Space Mono',monospace;
+  }
+
+  .log-section{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:20px;margin-bottom:24px;
+  }
+  .log-section h2{font-size:14px;font-weight:700;margin:0 0 14px;color:var(--text-2);letter-spacing:.03em;}
+  .log-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:6px;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:11px;color:var(--text-2);}
+  .field select, .field input{
+    background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);
+    border-radius:4px;padding:8px 10px;font-size:14px;font-family:'Zen Kaku Gothic New',sans-serif;
+  }
+  .field input[type=number]{width:80px;font-family:'Space Mono',monospace;}
+  .field input[type=date]{font-family:'Space Mono',monospace;}
+  .add-btn{
+    background:var(--appt);color:#2A1F08;border:none;border-radius:4px;
+    padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;
+    font-family:'Zen Kaku Gothic New',sans-serif;
+  }
+  .add-btn:hover{opacity:.9;}
+  .add-btn:active{transform:scale(.98);}
+  .status-msg{font-size:12px;color:var(--good);height:16px;margin-top:8px;}
+
+  table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px;}
+  th{
+    text-align:left;color:var(--text-3);font-weight:400;font-size:11px;
+    padding:6px 8px;border-bottom:1px solid var(--border-strong);
+  }
+  td{padding:8px;border-bottom:1px solid var(--border);}
+  td.num{font-family:'Space Mono',monospace;}
+  .del{
+    background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:12px;
+  }
+  .del:hover{color:#E24B4A;}
+  .empty{color:var(--text-3);font-size:13px;padding:20px 0;text-align:center;}
+  .footnote{font-size:11px;color:var(--text-3);margin-top:10px;line-height:1.6;}
+
+  .week-section{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:20px;margin-bottom:24px;
+  }
+  .week-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .week-header h2{font-size:14px;font-weight:700;margin:0;color:var(--text-2);letter-spacing:.03em;}
+  .week-select{
+    background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);
+    border-radius:4px;padding:7px 10px;font-size:13px;font-family:'Space Mono',monospace;
+    margin-bottom:14px;
+  }
+  .month-nav{display:flex;align-items:center;gap:8px;}
+  .month-nav-label{font-family:'Space Mono',monospace;font-size:13px;color:var(--text-2);min-width:76px;text-align:center;border:1px solid var(--border-strong);padding:6px 4px;border-radius:4px;}
+  .nav-btn{
+    background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);
+    border-radius:4px;width:32px;height:32px;font-size:18px;font-weight:700;cursor:pointer;line-height:1;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .nav-btn:hover{color:var(--bg);background:var(--appt);border-color:var(--appt);}
+  .week-team-line{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .week-team-line .label{font-size:12px;color:var(--text-2);}
+  .week-team-line .num{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:var(--appt);}
+  .week-track{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;}
+  .week-fill{height:100%;background:var(--appt);border-radius:3px;transition:width .4s ease;}
+  .wk-bar-track{width:70px;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px;border:1px solid var(--border);}
+  .wk-bar-fill{height:100%;background:var(--appt);border-radius:3px;}
+  .goal-input, .plan-input{
+    width:56px;background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);
+    border-radius:4px;padding:5px 6px;font-size:13px;font-family:'Space Mono',monospace;
+  }
+  .add-rep-row{display:flex;gap:8px;margin-bottom:32px;}
+  .add-rep-row input{
+    flex:1;max-width:220px;background:var(--surface);border:1px solid var(--border-strong);color:var(--text);
+    border-radius:4px;padding:8px 10px;font-size:13px;font-family:'Zen Kaku Gothic New',sans-serif;
+  }
+  .add-rep-btn{
+    background:transparent;color:var(--text-2);border:1px solid var(--border-strong);border-radius:4px;
+    padding:8px 16px;font-size:13px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;
+  }
+  .add-rep-btn:hover{border-color:var(--calls);color:var(--calls);}
+  .toast{
+    position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-16px);
+    background:#4A1B0C;color:#F5C4B3;border:1px solid #712B13;padding:10px 18px;
+    border-radius:6px;font-size:13px;font-family:'Zen Kaku Gothic New',sans-serif;
+    opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;
+    z-index:100;max-width:90%;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <h1>アポ獲得トラッカー</h1>
+      <div class="sub">新卒アポ獲得管理 / 個人目標は担当者ごとに設定</div>
+    </div>
+    <div class="month-nav">
+      <button class="nav-btn" id="prev-month-btn" aria-label="前月">‹</button>
+      <span class="month-nav-label" id="month-badge">----年--月</span>
+      <button class="nav-btn" id="next-month-btn" aria-label="翌月">›</button>
+    </div>
+  </div>
+
+  <div class="team-bar-section">
+    <div class="team-bar-top">
+      <div class="label">チーム合計アポ獲得数(目標 100件/月)</div>
+      <div class="num" id="team-num">0<span> / 100</span></div>
+    </div>
+    <div class="team-track"><div class="team-fill" id="team-fill" style="width:0%"></div></div>
+    <div class="team-sub-stats" id="team-sub-stats"></div>
+  </div>
+
+  <div class="grid" id="rep-grid"></div>
+
+  <div class="add-rep-row">
+    <input type="text" id="new-rep-name" placeholder="新しいメンバー名">
+    <button class="add-rep-btn" id="add-rep-btn">メンバー追加</button>
+  </div>
+
+  <div class="week-section">
+    <div class="week-header">
+      <h2>週次振り返り</h2>
+    </div>
+    <select class="week-select" id="week-select"></select>
+    <div class="week-team-line">
+      <div class="label">チーム週間アポ獲得数(アポ獲得週目標 <span id="week-team-goal-num"></span>件)</div>
+      <div class="num" id="week-team-num"></div>
+    </div>
+    <div class="week-track"><div class="week-fill" id="week-team-fill" style="width:0%"></div></div>
+    <table>
+      <thead>
+        <tr><th>担当者</th><th>架電予定数</th><th>架電数</th><th>予定達成率</th><th>アポ獲得数</th><th>アポ獲得週目標</th><th>アポ獲得率</th></tr>
+      </thead>
+      <tbody id="week-body"></tbody>
+    </table>
+    <div class="footnote">架電予定数とアポ獲得週目標は表内の数字をクリックして本人が自由に編集できます(架電予定数は週ごとに個別設定、アポ獲得週目標の初期値は5件/週)。予定達成率は架電数÷架電予定数です。週は月曜〜金曜で区切っています。</div>
+  </div>
+
+  <div class="log-section">
+    <h2>今日の実績を記録</h2>
+    <div class="log-form">
+      <div class="field">
+        <label>担当者</label>
+        <select id="in-rep"></select>
+      </div>
+      <div class="field">
+        <label>日付</label>
+        <input type="date" id="in-date">
+      </div>
+      <div class="field">
+        <label>架電数</label>
+        <input type="number" id="in-calls" min="0" value="0">
+      </div>
+      <div class="field">
+        <label>アポ獲得数</label>
+        <input type="number" id="in-appt" min="0" value="0">
+      </div>
+      <button class="add-btn" id="add-btn">記録する</button>
+    </div>
+    <div class="status-msg" id="status-msg"></div>
+
+    <table>
+      <thead>
+        <tr><th>日付</th><th>担当者</th><th>架電数</th><th>アポ獲得数</th><th></th></tr>
+      </thead>
+      <tbody id="log-body"></tbody>
+    </table>
+    <div class="empty" id="log-empty" style="display:none;">まだ記録がありません</div>
+    <div class="footnote">このボードのデータはチーム全員で共有されます。担当者名はクリックして編集できます。</div>
+  </div>
+
+</div>
+
+<script>
+const REP_KEY = 'apo-tracker-reps';
+const LOG_KEY = 'apo-tracker-log';
+const GOAL_KEY = 'apo-tracker-week-goals';
+const MONTH_GOAL_KEY = 'apo-tracker-month-goals';
+const CALL_PLAN_KEY = 'apo-tracker-call-plans';
+const GOAL_PER_REP = 20;
+const DEFAULT_WEEK_GOAL = 5;
+const DEFAULT_REPS = ['田尻','奥野','岡崎','山﨑','樋口','福島'];
+const INITIAL_MONTH_GOALS = { '福島': 40 };
+
+let reps = DEFAULT_REPS.slice();
+let logs = [];
+let weekGoals = {};
+let monthGoals = {};
+let callPlans = {};
+let viewYear = new Date().getFullYear();
+let viewMonth = new Date().getMonth() + 1;
+
+function fmtDate(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function todayStr(){
+  return fmtDate(new Date());
+}
+
+async function loadData(){
+  try{
+    const r = await window.storage.get('reps', true);
+    if(r && r.value) reps = JSON.parse(r.value);
+  }catch(e){ /* not found, use defaults */ }
+  try{
+    const l = await window.storage.get('logs', true);
+    if(l && l.value) logs = JSON.parse(l.value);
+  }catch(e){ /* not found */ }
+  try{
+    const g = await window.storage.get('goals', true);
+    if(g && g.value) weekGoals = JSON.parse(g.value);
+  }catch(e){ /* not found, use defaults */ }
+  try{
+    const mg = await window.storage.get('month-goals', true);
+    if(mg && mg.value) monthGoals = JSON.parse(mg.value);
+  }catch(e){ /* not found, use defaults */ }
+  try{
+    const cp = await window.storage.get('weekly-call-plans', true);
+    if(cp && cp.value) callPlans = JSON.parse(cp.value);
+  }catch(e){
+    try{
+      const legacy = await window.storage.get('call-plans', true);
+      if(legacy && legacy.value) callPlans = JSON.parse(legacy.value);
+    }catch(e2){ /* not found, use defaults */ }
+  }
+  render();
+}
+
+function planKey(weekStart, name){
+  return `${weekStart}|${name}`;
+}
+
+function planFor(weekStart, name){
+  const v = callPlans[planKey(weekStart, name)];
+  return v != null ? v : 0;
+}
+
+async function saveKeyWithRetry(key, value, attempts = 3){
+  for(let i = 0; i < attempts; i++){
+    try{
+      const result = await window.storage.set(key, value, true);
+      if(result) return true;
+    }catch(e){
+      console.error(`storage save failed for "${key}" (attempt ${i+1}/${attempts})`, e);
+    }
+    if(i < attempts - 1){
+      await new Promise(r => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  showSaveError();
+  return false;
+}
+
+function showSaveError(){
+  showToast('保存に失敗しました。少し待ってからもう一度入力してください');
+}
+
+function showToast(text){
+  const el = document.getElementById('toast');
+  if(!el) return;
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(()=>{ el.classList.remove('show'); }, 4000);
+}
+
+async function saveCallPlans(){
+  await saveKeyWithRetry('weekly-call-plans', JSON.stringify(callPlans));
+}
+
+function goalFor(name){
+  return weekGoals[name] != null ? weekGoals[name] : DEFAULT_WEEK_GOAL;
+}
+
+function monthGoalFor(name){
+  if(monthGoals[name] != null) return monthGoals[name];
+  if(INITIAL_MONTH_GOALS[name] != null) return INITIAL_MONTH_GOALS[name];
+  return GOAL_PER_REP;
+}
+
+async function saveMonthGoals(){
+  await saveKeyWithRetry('month-goals', JSON.stringify(monthGoals));
+}
+
+async function saveGoals(){
+  await saveKeyWithRetry('goals', JSON.stringify(weekGoals));
+}
+
+async function saveReps(){
+  await saveKeyWithRetry('reps', JSON.stringify(reps));
+}
+
+async function saveLogs(){
+  await saveKeyWithRetry('logs', JSON.stringify(logs));
+}
+
+function fmtMD(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function monthWeekChunks(year, month){
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0);
+  const chunks = [];
+  let cur = new Date(monthStart);
+  while(cur <= monthEnd){
+    const dow = cur.getDay();
+    if(dow === 0){ cur.setDate(cur.getDate() + 1); continue; }
+    if(dow === 6){ cur.setDate(cur.getDate() + 2); continue; }
+    const daysToFriday = 5 - dow;
+    let end = new Date(cur);
+    end.setDate(end.getDate() + daysToFriday);
+    if(end > monthEnd) end = new Date(monthEnd);
+    chunks.push({ start: fmtDate(cur), end: fmtDate(end) });
+    const next = new Date(cur);
+    next.setDate(next.getDate() + daysToFriday + 3);
+    cur = next;
+  }
+  return chunks;
+}
+
+function totalsForRepInWeek(name, start, end){
+  let calls = 0, appt = 0;
+  logs.forEach(l=>{
+    if(l.rep === name && l.date >= start && l.date <= end){
+      calls += l.calls;
+      appt += l.appt;
+    }
+  });
+  return {calls, appt};
+}
+
+function renderWeek(){
+  const chunks = monthWeekChunks(viewYear, viewMonth);
+  const select = document.getElementById('week-select');
+  const prevValue = select.value;
+  select.innerHTML = chunks.map(c=>`<option value="${c.start}">${fmtMD(c.start)}〜${fmtMD(c.end)}週</option>`).join('');
+
+  const starts = chunks.map(c=>c.start);
+  const today = todayStr();
+  const todayChunk = chunks.find(c => today >= c.start && today <= c.end);
+  select.value = starts.includes(prevValue) ? prevValue : (todayChunk ? todayChunk.start : (chunks[0] ? chunks[0].start : ''));
+
+  const chosen = chunks.find(c => c.start === select.value);
+  if(!chosen){
+    document.getElementById('week-team-goal-num').textContent = '0';
+    document.getElementById('week-team-num').textContent = '0 / 0';
+    document.getElementById('week-team-fill').style.width = '0%';
+    document.getElementById('week-body').innerHTML = '';
+    return;
+  }
+
+  const weekTotals = reps.map(name => ({
+    name,
+    goal: goalFor(name),
+    plan: planFor(chosen.start, name),
+    ...totalsForRepInWeek(name, chosen.start, chosen.end)
+  }));
+  const teamAppt = weekTotals.reduce((s,t)=>s+t.appt,0);
+  const teamGoal = weekTotals.reduce((s,t)=>s+t.goal,0);
+
+  document.getElementById('week-team-goal-num').textContent = teamGoal;
+  document.getElementById('week-team-num').textContent = `${teamAppt} / ${teamGoal}`;
+  document.getElementById('week-team-fill').style.width = teamGoal > 0 ? Math.min(100, (teamAppt/teamGoal)*100) + '%' : '0%';
+
+  const body = document.getElementById('week-body');
+  body.innerHTML = weekTotals.map(t=>{
+    const rate = t.calls > 0 ? Math.round((t.appt/t.calls)*1000)/10 : 0;
+    const pct = t.goal > 0 ? Math.min(100, (t.appt/t.goal)*100) : 0;
+    const planRate = t.plan > 0 ? Math.round((t.calls/t.plan)*1000)/10 : null;
+    const planPct = t.plan > 0 ? Math.min(100, (t.calls/t.plan)*100) : 0;
+    return `
+      <tr>
+        <td>${t.name}</td>
+        <td class="num"><input type="number" class="plan-input" min="0" value="${t.plan}" data-name="${t.name}"></td>
+        <td class="num">${t.calls}</td>
+        <td class="num">${planRate === null ? '—' : `<span class="wk-bar-track"><span class="wk-bar-fill" style="width:${planPct}%"></span></span>${planRate}%`}</td>
+        <td class="num">${t.appt}</td>
+        <td class="num"><input type="number" class="goal-input" min="0" value="${t.goal}" data-name="${t.name}"></td>
+        <td class="num"><span class="wk-bar-track"><span class="wk-bar-fill" style="width:${pct}%"></span></span>${rate}%</td>
+      </tr>`;
+  }).join('');
+
+  body.querySelectorAll('.plan-input').forEach(inp=>{
+    inp.addEventListener('change', async (e)=>{
+      if(e.target.disabled) return;
+      e.target.disabled = true;
+      const name = e.target.dataset.name;
+      const val = Math.max(0, parseInt(e.target.value) || 0);
+      callPlans[planKey(chosen.start, name)] = val;
+      await saveCallPlans();
+      renderWeek();
+    });
+  });
+
+  body.querySelectorAll('.goal-input').forEach(inp=>{
+    inp.addEventListener('change', async (e)=>{
+      if(e.target.disabled) return;
+      e.target.disabled = true;
+      const name = e.target.dataset.name;
+      const val = Math.max(0, parseInt(e.target.value) || 0);
+      weekGoals[name] = val;
+      await saveGoals();
+      renderWeek();
+    });
+  });
+}
+
+function totalsForRep(name){
+  const monthKey = `${viewYear}-${String(viewMonth).padStart(2,'0')}`;
+  let calls = 0, appt = 0;
+  logs.forEach(l=>{
+    if(l.rep === name && l.date.slice(0,7) === monthKey){
+      calls += l.calls;
+      appt += l.appt;
+    }
+  });
+  return {calls, appt};
+}
+
+function render(){
+  document.getElementById('month-badge').textContent = `${viewYear}年${viewMonth}月`;
+
+  const repSelect = document.getElementById('in-rep');
+  repSelect.innerHTML = reps.map(r=>`<option value="${r}">${r}</option>`).join('');
+  document.getElementById('in-date').value = todayStr();
+
+  const totals = reps.map(name=>({name, goal: monthGoalFor(name), ...totalsForRep(name)}));
+  const teamAppt = totals.reduce((s,t)=>s+t.appt,0);
+  const teamGoal = totals.reduce((s,t)=>s+t.goal,0);
+  const teamCalls = totals.reduce((s,t)=>s+t.calls,0);
+  const teamRate = teamCalls > 0 ? Math.round((teamAppt/teamCalls)*1000)/10 : 0;
+  document.getElementById('team-num').innerHTML = `${teamAppt}<span> / ${teamGoal}</span>`;
+  document.getElementById('team-fill').style.width = teamGoal > 0 ? Math.min(100, (teamAppt/teamGoal)*100) + '%' : '0%';
+  document.getElementById('team-sub-stats').innerHTML = `架電数合計 <span class="hl">${teamCalls}</span>件 ・ アポ獲得率 ${teamRate}%`;
+
+  const sorted = [...totals].sort((a,b)=>b.appt - a.appt);
+  const rankOf = name => sorted.findIndex(t=>t.name===name) + 1;
+
+  const grid = document.getElementById('rep-grid');
+  grid.innerHTML = totals.map((t,i)=>{
+    const rate = t.calls > 0 ? Math.round((t.appt/t.calls)*1000)/10 : 0;
+    const pct = t.goal > 0 ? Math.min(100, (t.appt/t.goal)*100) : 0;
+    return `
+    <div class="rep-card">
+      <div class="rep-top">
+        <input class="rep-name" data-idx="${i}" value="${t.name}">
+        <span class="rank">#${rankOf(t.name)}</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat calls"><div class="k">架電数</div><div class="v">${t.calls}</div></div>
+        <div class="stat appt"><div class="k">アポ獲得数</div><div class="v">${t.appt}</div></div>
+      </div>
+      <div class="rate">アポ獲得率 ${rate}%</div>
+      <div class="goal-track"><div class="goal-fill" style="width:${pct}%"></div></div>
+      <div class="goal-label">${t.appt} / <input type="number" class="month-goal-input" min="0" value="${t.goal}" data-name="${t.name}">件(月目標)</div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.month-goal-input').forEach(inp=>{
+    inp.addEventListener('change', async (e)=>{
+      if(e.target.disabled) return;
+      e.target.disabled = true;
+      const name = e.target.dataset.name;
+      const val = Math.max(0, parseInt(e.target.value) || 0);
+      monthGoals[name] = val;
+      await saveMonthGoals();
+      render();
+    });
+  });
+
+  grid.querySelectorAll('.rep-name').forEach(inp=>{
+    inp.addEventListener('change', async (e)=>{
+      const idx = parseInt(e.target.dataset.idx);
+      const oldName = reps[idx];
+      const newName = e.target.value.trim() || oldName;
+      logs.forEach(l=>{ if(l.rep === oldName) l.rep = newName; });
+      if(weekGoals[oldName] != null){
+        weekGoals[newName] = weekGoals[oldName];
+        delete weekGoals[oldName];
+      }
+      if(monthGoals[oldName] != null){
+        monthGoals[newName] = monthGoals[oldName];
+        delete monthGoals[oldName];
+      }
+      Object.keys(callPlans).forEach(key=>{
+        if(key.endsWith(`|${oldName}`)){
+          const weekStart = key.slice(0, key.length - oldName.length - 1);
+          callPlans[planKey(weekStart, newName)] = callPlans[key];
+          delete callPlans[key];
+        }
+      });
+      reps[idx] = newName;
+      await saveReps();
+      await saveLogs();
+      await saveGoals();
+      await saveMonthGoals();
+      await saveCallPlans();
+      render();
+    });
+  });
+
+  const sortedLogs = [...logs].sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
+  const body = document.getElementById('log-body');
+  const emptyMsg = document.getElementById('log-empty');
+  if(sortedLogs.length === 0){
+    body.innerHTML = '';
+    emptyMsg.style.display = 'block';
+  }else{
+    emptyMsg.style.display = 'none';
+    body.innerHTML = sortedLogs.slice(0,50).map(l=>`
+      <tr>
+        <td class="num">${l.date}</td>
+        <td>${l.rep}</td>
+        <td class="num">${l.calls}</td>
+        <td class="num">${l.appt}</td>
+        <td><button class="del" data-id="${l.id}">削除</button></td>
+      </tr>`).join('');
+    body.querySelectorAll('.del').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        const id = parseInt(e.target.dataset.id);
+        logs = logs.filter(l=>l.id !== id);
+        await saveLogs();
+        render();
+      });
+    });
+  }
+
+  renderWeek();
+}
+
+document.getElementById('add-rep-btn').addEventListener('click', async ()=>{
+  const input = document.getElementById('new-rep-name');
+  const name = input.value.trim();
+  if(!name) return;
+  if(reps.includes(name)){
+    input.value = '';
+    return;
+  }
+  reps.push(name);
+  await saveReps();
+  input.value = '';
+  render();
+});
+
+document.getElementById('prev-month-btn').addEventListener('click', ()=>{
+  viewMonth -= 1;
+  if(viewMonth < 1){ viewMonth = 12; viewYear -= 1; }
+  document.getElementById('week-select').value = '';
+  render();
+});
+
+document.getElementById('next-month-btn').addEventListener('click', ()=>{
+  viewMonth += 1;
+  if(viewMonth > 12){ viewMonth = 1; viewYear += 1; }
+  document.getElementById('week-select').value = '';
+  render();
+});
+
+document.getElementById('week-select').addEventListener('change', renderWeek);
+
+document.getElementById('add-btn').addEventListener('click', async ()=>{
+  const rep = document.getElementById('in-rep').value;
+  const date = document.getElementById('in-date').value || todayStr();
+  const calls = parseInt(document.getElementById('in-calls').value) || 0;
+  const appt = parseInt(document.getElementById('in-appt').value) || 0;
+
+  if(calls === 0 && appt === 0){
+    const msg = document.getElementById('status-msg');
+    msg.textContent = '架電数かアポ獲得数を入力してください';
+    msg.style.color = '#E24B4A';
+    return;
+  }
+
+  logs.push({ id: Date.now(), rep, date, calls, appt });
+  await saveLogs();
+
+  document.getElementById('in-calls').value = 0;
+  document.getElementById('in-appt').value = 0;
+  const msg = document.getElementById('status-msg');
+  msg.textContent = '記録しました';
+  msg.style.color = '#6FC08A';
+  setTimeout(()=>{ msg.textContent=''; }, 2000);
+
+  render();
+});
+
+loadData();
+</script>
+</body>
+</html>
