@@ -1,0 +1,46 @@
+:root {
+  --bg: #12151c;
+  --surface: #1a1e28;
+  --surface-2: #212632;
+  --border: #2a2f3a;
+  --border-strong: #3a4150;
+  --text: #ededE5;
+  --text-2: #9ca0ac;
+  --text-3: #666c79;
+  --calls: #4fa8d8;
+  --calls-dim: #2c4a5c;
+  --appt: #e8b34a;
+  --appt-dim: #5c4a22;
+  --good: #6fc08a;
+  --danger: #e24b4a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
