@@ -6,7 +6,7 @@ import AddRepRow from './components/AddRepRow'
 import WeeklyReview from './components/WeeklyReview'
 import LogSection from './components/LogSection'
 import Toast from './components/Toast'
-import { supabase } from './lib/supabaseClient'
+import { supabase, isSupabaseConfigured } from './lib/supabaseClient'
 import * as api from './lib/api'
 import { monthWeekChunks, todayStr } from './lib/date'
 import './App.css'
@@ -29,6 +29,11 @@ function App() {
   }, [])
 
   const loadAll = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      setLoadError(new Error('Supabaseの環境変数(VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)が設定されていません。'))
+      setLoading(false)
+      return
+    }
     try {
       const [repsData, logsData, plansData] = await Promise.all([
         api.fetchReps(),
@@ -53,6 +58,7 @@ function App() {
 
   // 他のメンバーが更新した内容をリアルタイムで反映する
   useEffect(() => {
+    if (!isSupabaseConfigured) return
     const channel = supabase
       .channel('apo-tracker-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reps' }, loadAll)
@@ -236,7 +242,14 @@ function App() {
   if (loadError) {
     return (
       <div className="loading-screen">
-        データの読み込みに失敗しました。Supabaseの接続設定(.env)を確認してください。
+        <p>データの読み込みに失敗しました。Supabaseの接続設定を確認してください。</p>
+        <p style={{ marginTop: 8, opacity: 0.7, fontSize: '0.85em' }}>
+          {loadError.message ?? String(loadError)}
+        </p>
+        <p style={{ marginTop: 8, opacity: 0.7, fontSize: '0.85em' }}>
+          Vercelの環境変数(VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)が正しいか、Supabaseの
+          SQL Editorで supabase/schema.sql を実行済みかを確認してください。
+        </p>
       </div>
     )
   }
